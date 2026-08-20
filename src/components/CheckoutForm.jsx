@@ -1,0 +1,116 @@
+import { useState } from 'react'
+import { supabase } from '../lib/supabase'
+import { useCart } from '../context/CartContext'
+
+export default function CheckoutForm({ isOpen, onClose }) {
+  const { items, total, setItems } = useCart()
+  const [form, setForm] = useState({ name: '', phone: '', address: '', notes: '' })
+  const [submitting, setSubmitting] = useState(false)
+
+  if (!isOpen) return null
+
+  async function handleSubmit(e) {
+    e.preventDefault()
+    setSubmitting(true)
+
+    const { data: order, error: orderError } = await supabase
+      .from('orders')
+      .insert({
+        customer_name: form.name,
+        customer_phone: form.phone,
+        customer_address: form.address,
+        notes: form.notes,
+        total_amount: total,
+      })
+      .select()
+      .single()
+
+    if (orderError) {
+      alert('Gagal membuat pesanan: ' + orderError.message)
+      setSubmitting(false)
+      return
+    }
+
+    const orderItems = items.map((i) => ({
+      order_id: order.id,
+      product_id: i.id,
+      product_name: i.name,
+      price: i.price,
+      quantity: i.quantity,
+    }))
+
+    const { error: itemsError } = await supabase.from('order_items').insert(orderItems)
+
+    if (itemsError) {
+      alert('Gagal menyimpan item: ' + itemsError.message)
+      setSubmitting(false)
+      return
+    }
+
+    const message =
+      `Halo Deksri Yadnya, saya ${form.name} ingin pesan:\n` +
+      items.map((i) => `- ${i.name} x${i.quantity}`).join('\n') +
+      `\nTotal: Rp${total.toLocaleString('id-ID')}` +
+      `\nAlamat: ${form.address}`
+
+    window.location.href = `https://wa.me/6281234567890?text=${encodeURIComponent(message)}`
+  }
+
+  return (
+    <div className="fixed inset-0 z-[110] flex items-center justify-center p-4">
+      <div className="absolute inset-0 bg-black/40" onClick={onClose}></div>
+      <div className="relative bg-[#FBF5E9] rounded-2xl max-w-md w-full p-6 max-h-[90vh] overflow-y-auto">
+        <div className="flex items-center justify-between mb-4">
+          <h2 className="text-xl font-semibold text-[#6B1E23]">Checkout</h2>
+          <button onClick={onClose} className="text-2xl text-[#2B2018]/50 hover:text-[#2B2018]">
+            &times;
+          </button>
+        </div>
+
+        <form onSubmit={handleSubmit} className="space-y-3">
+          <input
+            required
+            placeholder="Nama Lengkap"
+            className="w-full border border-[#B8863E]/30 rounded-lg p-3 bg-white"
+            value={form.name}
+            onChange={(e) => setForm({ ...form, name: e.target.value })}
+          />
+          <input
+            required
+            placeholder="No. WhatsApp"
+            className="w-full border border-[#B8863E]/30 rounded-lg p-3 bg-white"
+            value={form.phone}
+            onChange={(e) => setForm({ ...form, phone: e.target.value })}
+          />
+          <textarea
+            required
+            placeholder="Alamat Lengkap"
+            className="w-full border border-[#B8863E]/30 rounded-lg p-3 bg-white"
+            rows={3}
+            value={form.address}
+            onChange={(e) => setForm({ ...form, address: e.target.value })}
+          />
+          <textarea
+            placeholder="Catatan (opsional)"
+            className="w-full border border-[#B8863E]/30 rounded-lg p-3 bg-white"
+            rows={2}
+            value={form.notes}
+            onChange={(e) => setForm({ ...form, notes: e.target.value })}
+          />
+
+          <div className="flex justify-between font-semibold text-lg py-2">
+            <span>Total</span>
+            <span className="text-[#6B1E23]">Rp{total.toLocaleString('id-ID')}</span>
+          </div>
+
+          <button
+            disabled={submitting}
+            className="w-full bg-[#6B1E23] text-white rounded-lg py-3 font-semibold hover:bg-[#4A1418] transition-colors disabled:opacity-50"
+          >
+            {submitting ? 'Memproses...' : 'Konfirmasi via WhatsApp'}
+          </button>
+        </form>
+      </div>
+    </div>
+  )
+}
