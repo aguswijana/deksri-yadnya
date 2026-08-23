@@ -1,10 +1,17 @@
 import { useState } from 'react'
 import { supabase } from '../lib/supabase'
 import { useCart } from '../context/CartContext'
+import { useAuth } from '../context/AuthContext'
 
 export default function CheckoutForm({ isOpen, onClose }) {
   const { items, total } = useCart()
-  const [form, setForm] = useState({ name: '', phone: '', address: '', notes: '' })
+  const { user, profile } = useAuth()
+  const [form, setForm] = useState({
+    name: profile?.full_name || '',
+    phone: profile?.phone || '',
+    address: '',
+    notes: '',
+  })
   const [submitting, setSubmitting] = useState(false)
 
   if (!isOpen) return null
@@ -19,6 +26,7 @@ export default function CheckoutForm({ isOpen, onClose }) {
       .from('orders')
       .insert({
         id: orderId,
+        customer_id: user?.id || null,
         customer_name: form.name,
         customer_phone: form.phone,
         customer_address: form.address,
@@ -47,30 +55,32 @@ export default function CheckoutForm({ isOpen, onClose }) {
       setSubmitting(false)
       return
     }
-const orderDate = new Date().toLocaleDateString('id-ID', {
-  day: 'numeric',
-  month: 'long',
-  year: 'numeric',
-})
 
-const itemsList = items
-  .map((i) => `• ${i.name}\n  ${i.quantity} x Rp${i.price.toLocaleString('id-ID')} = *Rp${(i.price * i.quantity).toLocaleString('id-ID')}*`)
-  .join('\n\n')
+    const orderDate = new Date().toLocaleDateString('id-ID', {
+      day: 'numeric',
+      month: 'long',
+      year: 'numeric',
+    })
 
-const message =
-  `Halo *Deksri Yadnya* 🙏\n` +
-  `Saya ingin memesan:\n\n` +
-  `━━━━━━━━━━━━━━\n` +
-  `${itemsList}\n` +
-  `━━━━━━━━━━━━━━\n\n` +
-  `*Total: Rp${total.toLocaleString('id-ID')}*\n\n` +
-  `📋 *Detail Pemesan*\n` +
-  `Nama: ${form.name}\n` +
-  `No. HP: ${form.phone}\n` +
-  `Alamat: ${form.address}\n` +
-  `Catatan: ${form.notes ? form.notes : '-'}` +
-  `\n\nTanggal pesan: ${orderDate}\n\n` +
-  `Mohon konfirmasi ketersediaan dan proses selanjutnya. Terima kasih 🙏`
+    const itemsList = items
+      .map((i) => `• ${i.name}\n  ${i.quantity} x Rp${i.price.toLocaleString('id-ID')} = *Rp${(i.price * i.quantity).toLocaleString('id-ID')}*`)
+      .join('\n\n')
+
+    const message =
+      `Halo *Deksri Yadnya* 🙏\n` +
+      `Saya ingin memesan:\n\n` +
+      `━━━━━━━━━━━━━━\n` +
+      `${itemsList}\n` +
+      `━━━━━━━━━━━━━━\n\n` +
+      `*Total: Rp${total.toLocaleString('id-ID')}*\n\n` +
+      `📋 *Detail Pemesan*\n` +
+      `Nama: ${form.name}\n` +
+      `No. HP: ${form.phone}\n` +
+      `Alamat: ${form.address}\n` +
+      `Catatan: ${form.notes ? form.notes : '-'}` +
+      `\n\nTanggal pesan: ${orderDate}\n\n` +
+      `Mohon konfirmasi ketersediaan dan proses selanjutnya. Terima kasih 🙏`
+
     window.location.href = `https://wa.me/6289681297582?text=${encodeURIComponent(message)}`
   }
 
