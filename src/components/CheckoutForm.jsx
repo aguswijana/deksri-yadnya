@@ -53,7 +53,7 @@ export default function CheckoutForm({ isOpen, onClose }) {
       `\nTotal: Rp${total.toLocaleString('id-ID')}` +
       `\nAlamat: ${form.address}`
 
-    window.location.href = `https://wa.me/6281234567890?text=${encodeURIComponent(message)}`
+    window.location.href = `https://wa.me/6289681297582?text=${encodeURIComponent(message)}`
   }
 
   return (
