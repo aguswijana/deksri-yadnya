@@ -3,7 +3,7 @@ import { supabase } from '../lib/supabase'
 import { useCart } from '../context/CartContext'
 
 export default function CheckoutForm({ isOpen, onClose }) {
-  const { items, total, setItems } = useCart()
+  const { items, total } = useCart()
   const [form, setForm] = useState({ name: '', phone: '', address: '', notes: '' })
   const [submitting, setSubmitting] = useState(false)
 
@@ -15,21 +15,25 @@ export default function CheckoutForm({ isOpen, onClose }) {
 
     const orderId = crypto.randomUUID()
 
-const orderItems = items.map((i) => ({
-  order_id: orderId,
-  product_id: i.id,
-  product_name: i.name,
-  price: i.price,
-  quantity: i.quantity,
-}))
+    const { error: orderError } = await supabase
+      .from('orders')
+      .insert({
+        id: orderId,
+        customer_name: form.name,
+        customer_phone: form.phone,
+        customer_address: form.address,
+        notes: form.notes,
+        total_amount: total,
+      })
 
-if (orderError) {
-  alert('Gagal membuat pesanan: ' + orderError.message)
-  setSubmitting(false)
-  return
-}
+    if (orderError) {
+      alert('Gagal membuat pesanan: ' + orderError.message)
+      setSubmitting(false)
+      return
+    }
+
     const orderItems = items.map((i) => ({
-      order_id: order.id,
+      order_id: orderId,
       product_id: i.id,
       product_name: i.name,
       price: i.price,
@@ -50,7 +54,7 @@ if (orderError) {
       `\nTotal: Rp${total.toLocaleString('id-ID')}` +
       `\nAlamat: ${form.address}`
 
-    window.location.href = `https://wa.me/6289681297582?text=${encodeURIComponent(message)}`
+    window.location.href = `https://wa.me/6281234567890?text=${encodeURIComponent(message)}`
   }
 
   return (
