@@ -47,14 +47,31 @@ export default function CheckoutForm({ isOpen, onClose }) {
       setSubmitting(false)
       return
     }
+const orderDate = new Date().toLocaleDateString('id-ID', {
+  day: 'numeric',
+  month: 'long',
+  year: 'numeric',
+})
 
-    const message =
-      `Halo Deksri Yadnya, saya ${form.name} ingin pesan:\n` +
-      items.map((i) => `- ${i.name} x${i.quantity}`).join('\n') +
-      `\nTotal: Rp${total.toLocaleString('id-ID')}` +
-      `\nAlamat: ${form.address}`
+const itemsList = items
+  .map((i) => `• ${i.name}\n  ${i.quantity} x Rp${i.price.toLocaleString('id-ID')} = *Rp${(i.price * i.quantity).toLocaleString('id-ID')}*`)
+  .join('\n\n')
 
-    window.location.href = `https://wa.me/6281234567890?text=${encodeURIComponent(message)}`
+const message =
+  `Halo *Deksri Yadnya* 🙏\n` +
+  `Saya ingin memesan:\n\n` +
+  `━━━━━━━━━━━━━━\n` +
+  `${itemsList}\n` +
+  `━━━━━━━━━━━━━━\n\n` +
+  `*Total: Rp${total.toLocaleString('id-ID')}*\n\n` +
+  `📋 *Detail Pemesan*\n` +
+  `Nama: ${form.name}\n` +
+  `No. HP: ${form.phone}\n` +
+  `Alamat: ${form.address}\n` +
+  `Catatan: ${form.notes ? form.notes : '-'}` +
+  `\n\nTanggal pesan: ${orderDate}\n\n` +
+  `Mohon konfirmasi ketersediaan dan proses selanjutnya. Terima kasih 🙏`
+    window.location.href = `https://wa.me/6289681297582?text=${encodeURIComponent(message)}`
   }
 
   return (
