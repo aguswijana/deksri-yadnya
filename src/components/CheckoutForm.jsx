@@ -13,24 +13,21 @@ export default function CheckoutForm({ isOpen, onClose }) {
     e.preventDefault()
     setSubmitting(true)
 
-    const { data: order, error: orderError } = await supabase
-      .from('orders')
-      .insert({
-        customer_name: form.name,
-        customer_phone: form.phone,
-        customer_address: form.address,
-        notes: form.notes,
-        total_amount: total,
-      })
-      .select()
-      .single()
+    const orderId = crypto.randomUUID()
 
-    if (orderError) {
-      alert('Gagal membuat pesanan: ' + orderError.message)
-      setSubmitting(false)
-      return
-    }
+const orderItems = items.map((i) => ({
+  order_id: orderId,
+  product_id: i.id,
+  product_name: i.name,
+  price: i.price,
+  quantity: i.quantity,
+}))
 
+if (orderError) {
+  alert('Gagal membuat pesanan: ' + orderError.message)
+  setSubmitting(false)
+  return
+}
     const orderItems = items.map((i) => ({
       order_id: order.id,
       product_id: i.id,
